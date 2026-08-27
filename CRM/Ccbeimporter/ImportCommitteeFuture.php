@@ -36,7 +36,7 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
     return $results[0]['id'];
   }
 
-  private function addEmail(int $contactId): void {
+  private function addEmail(int $contactId, array $row): void {
     $EMAIL_TYPE_WORK = 2;
     $EMAIL_TYPE_OTHER = 4;
     $primaryEmail = TRUE;
