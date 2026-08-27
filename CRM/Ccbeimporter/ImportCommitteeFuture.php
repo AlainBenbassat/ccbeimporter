@@ -8,7 +8,7 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
 
     foreach ($rows as $row) {
       $contactId = $this->getContactIdFromName($row['FirstName'], $row['LastName']);
-      $this->addEmail($contactId, $row['Email']);
+      $this->addEmail($contactId, $row);
       $this->addRelationship($contactId, $row);
     }
   }
@@ -34,35 +34,46 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
     return $results[0]['id'];
   }
 
-  private function addEmail(int $contactId, string $email): void {
-    $numEmails = 0;
+  private function addEmail(int $contactId): void {
     $EMAIL_TYPE_WORK = 2;
     $EMAIL_TYPE_OTHER = 4;
+    $primaryEmail = TRUE;
 
+    // the Excel cell can contain multiple emails separated by semicolon
+    $emailsToImportFullList = explode(';', str_replace(' ', '', $row['Email']));
+    $emailsToImport = [];
+
+    // get all emails for this contact
     $existingEmails = \Civi\Api4\Email::get(FALSE)
       ->addWhere('contact_id', '=', $contactId)
       ->execute();
+
+    // loop over existing emails and remove them from the list of emails to import
+    $numEmails = 0;
     foreach ($existingEmails as $existingEmail) {
-      $numEmails++;
-      if ($existingEmail['email'] == $email) {
-        return; // exists
+      $primaryEmail = FALSE;
+      if (!in_array($existingEmail['email'], $emailsToImportFullList)) {
+        $emailsToImport[] = $existingEmail['email'];
       }
     }
 
-    // email does not exists: add it
-    \Civi\Api4\Email::create(FALSE)
-      ->addValue('contact_id', $contactId)
-      ->addValue('location_type_id', $numEmails > 0 ? $EMAIL_TYPE_OTHER : $EMAIL_TYPE_WORK)
-      ->addValue('email', $email)
-      ->execute();
+    foreach ($emailsToImport as $email) {
+      \Civi\Api4\Email::create(FALSE)
+        ->addValue('contact_id', $contactId)
+        ->addValue('location_type_id', $primaryEmail ? $EMAIL_TYPE_WORK : $EMAIL_TYPE_OTHER)
+        ->addValue('email', $email)
+        ->execute();
+
+      $primaryEmail = FALSE;
+    }
   }
 
   private function addRelationship(int $contactId, array $row): void {
-    $RELTYPE_MEMBER = 18;
-    $RELTYPE_FOLLOWER = 19;
+    $RELTYPE_EXPERT = 24;
+    $RELTYPE_MAIL_RECEIPIENT = 23;
     $COMMITTEE_ID = 210;
 
-    $relTypeId = $row['InExtranet'] == 'Yes' ? $RELTYPE_MEMBER : $RELTYPE_FOLLOWER;
+    $relTypeId = $row['Relationship'] == 'Committee or Network Expert Member of' ? $RELTYPE_EXPERT : $RELTYPE_MAIL_RECEIPIENT;
 
     $relationship = \Civi\Api4\Relationship::get(FALSE)
       ->addWhere('contact_id_a', '=', $contactId)
@@ -79,7 +90,7 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
       ->addValue('contact_id_a', $contactId)
       ->addValue('contact_id_b', $COMMITTEE_ID)
       ->addValue('relationship_type_id', $relTypeId)
-      ->addValue('Committee_Member_Details.Country', $this->getCountryId($row['Country']))
+      ->addValue('Committee_or_Network_Relationship_Details.Country', $this->getCountryId($row['Country']))
       ->execute();
   }
 
