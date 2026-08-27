@@ -14,6 +14,8 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
   }
 
   private function getContactIdFromName(string $firstName, $lastName): int {
+    echo "Importing {$firstName} {$lastName}\n";
+
     // contact exists?
     $contact = \Civi\Api4\Contact::get(FALSE)
       ->addWhere('first_name', '=', $firstName)
