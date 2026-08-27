@@ -43,7 +43,7 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
     $primaryEmail = TRUE;
 
     // the Excel cell can contain multiple emails separated by semicolon
-    $emailsToImportFullList = explode(';', str_replace(' ', '', strtolower($row['Email']));
+    $emailsToImportFullList = explode(';', str_replace(' ', '', strtolower($row['Email'])));
     $emailsToImport = [];
 
     // get all emails for this contact
