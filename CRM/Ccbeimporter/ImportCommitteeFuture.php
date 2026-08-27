@@ -8,6 +8,7 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
 
     foreach ($rows as $row) {
       $contactId = $this->getContactIdFromName($row['FirstName'], $row['LastName']);
+      CRM_Core_DAO::executeQuery("delete from civicrm_email where contact_id = {$contactId} and location_type_id = 4");
       $this->addEmail($contactId, $row);
       $this->addRelationship($contactId, $row);
     }
