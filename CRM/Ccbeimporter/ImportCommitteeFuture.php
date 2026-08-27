@@ -46,16 +46,19 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
     $emailsToImport = [];
 
     // get all emails for this contact
-    $existingEmails = \Civi\Api4\Email::get(FALSE)
+    $existingEmails = [];
+    $existingEmailsAPI = \Civi\Api4\Email::get(FALSE)
       ->addWhere('contact_id', '=', $contactId)
       ->execute();
+    foreach ($existingEmailsAPI as $existingEmail) {
+      $primaryEmail = FALSE;
+      $existingEmails[] = $existingEmail['email'];
+    }
 
     // loop over existing emails and remove them from the list of emails to import
-    $numEmails = 0;
-    foreach ($existingEmails as $existingEmail) {
-      $primaryEmail = FALSE;
-      if (!in_array($existingEmail['email'], $emailsToImportFullList)) {
-        $emailsToImport[] = $existingEmail['email'];
+    foreach ($emailsToImportFullList as $emailToImport) {
+      if (!in_array($emailToImport, $existingEmails)) {
+        $emailsToImport[] = $emailToImport;
       }
     }
 
