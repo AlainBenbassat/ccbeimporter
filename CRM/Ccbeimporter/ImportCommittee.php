@@ -1,13 +1,13 @@
 <?php
 // Usage:
-// cv php:eval '$x = new CRM_Ccbeimporter_ImportCommitteeFuture(); $x->run("/tmp/TEST.csv");'
+// cv php:eval '$x = new CRM_Ccbeimporter_ImportCommittee(); $x->run("/tmp/TEST.csv");'
 
-class CRM_Ccbeimporter_ImportCommitteeFuture {
+class CRM_Ccbeimporter_ImportCommittee {
   public function run(string $filePath) {
     [$headers, $rows] = $this->openCsv($filePath);
 
     foreach ($rows as $row) {
-      $contactId = $this->getContactIdFromName($row['FirstName'], $row['LastName']);
+      $contactId = $this->getContactIdFromName($row['First Name'], $row['Last Name']);
       CRM_Core_DAO::executeQuery("delete from civicrm_email where contact_id = {$contactId} and location_type_id = 4");
       $this->addEmail($contactId, $row);
       $this->addRelationship($contactId, $row);
@@ -77,7 +77,7 @@ class CRM_Ccbeimporter_ImportCommitteeFuture {
   private function addRelationship(int $contactId, array $row): void {
     $RELTYPE_EXPERT = 24;
     $RELTYPE_MAIL_RECEIPIENT = 23;
-    $COMMITTEE_ID = 210;
+    $COMMITTEE_ID = 214;
 
     $relTypeId = $row['Relationship'] == 'Committee or Network Expert Member of' ? $RELTYPE_EXPERT : $RELTYPE_MAIL_RECEIPIENT;
 
